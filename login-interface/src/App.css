@@ -1,0 +1,128 @@
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+
+/* Fond général */
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;  /* 100% de la hauteur de la fenêtre */
+  width: 100vw;   /* 100% de la largeur */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+
+/* Boîte de connexion */
+.login-box {
+  background: rgba(0, 77, 77, 0.948);
+  padding: 40px;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Titre */
+.login-title {
+  background-color: red;
+  color: white;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  font-size: 18px;
+}
+
+/* Champs de saisie */
+.login-input {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+/* Bouton de connexion */
+.login-button {
+  background-color: #3385ff;
+  color: white;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.login-button:hover {
+  background-color: #1a5fd5;
+}
+
+.content {
+  padding-top: 80px; /* Ajoute un espace pour éviter que le contenu passe sous le menu */
+  text-align: center;
+}
+
+.login-links {
+  margin-top: 15px;
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.login-links a {
+  color: rgb(255, 255, 255);
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.3s;
+}
+
+.login-links a:hover {
+  color: #1a5fd5; /* Bleu au survol */
+}
+
+.login-links .signup {
+  text-decoration: underline; /* Souligner "S'inscrire" */
+  font-weight: bold; /* Optionnel : met en gras */
+}
+
+/* Conteneur principal avec flou */
+.background-slider {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: background-image 1s ease-in-out;
+  z-index: -2; /* Place en arrière-plan */
+}
+
+/* Effet de flou avec un overlay */
+.background-slider::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  backdrop-filter: blur(2px); /* Effet de flou */
+  background-color: rgba(0, 0, 0, 0.3); /* Assombrit légèrement */
+  z-index: -1;
+}
+
+/* Assurer que le formulaire reste net */
+.login-box {
+  background: rgba(0, 77, 77, 0.9); /* Rend le fond plus opaque */
+  backdrop-filter: none; /* Pas de flou sur le formulaire */
+  padding: 40px;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+}

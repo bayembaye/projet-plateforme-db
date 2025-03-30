@@ -1,0 +1,167 @@
+/* Conteneur principal */
+.container {
+  display: flex;
+  height: 100vh;
+  background-color: #E5E5E5;
+}
+
+/* Menu latéral */
+.sidebar {
+  width: 200px;
+  background-color: rgba(0, 77, 77, 0.948);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 40px;
+}
+
+/* Éléments du menu */
+.menu-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 20px 0;
+  cursor: pointer;
+  font-size: 18px;
+  font-family: 'Cursive', sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.menu-item .icon {
+  font-size: 50px;
+  margin-bottom: 5px;
+}
+
+.menu-item span {
+  margin-top: 5px;
+}
+
+/* Effet actif */
+.menu-item.active {
+  background-color: white; /* Fond blanc */
+  color: rgba(0, 77, 77, 0.948); /* Texte en bleu canard */
+  font-weight: bold;
+  border-left: 5px solid #ffffff; /* Bordure blanche à gauche */
+}
+
+/* Séparateurs inclinés */
+.separator {
+  width: 80%;
+  height: 2px;
+  background-color: white;
+  margin: 5px 0;
+  transform: rotate(-2deg);
+}
+
+/* Contenu principal */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Menu du haut */
+.top-menu {
+  background-color: #444;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  padding: 15px;
+  font-size: 18px;
+}
+
+/* Contenu du dashboard */
+.dashboard-content {
+  display: flex;
+  justify-content: space-around;
+  padding: 20px;
+}
+
+/* Bloc Notes */
+.notes-box {
+  margin-top: 100px;
+  background-color: #1BABFC;
+  padding: 20px;
+  border-radius: 8px;
+  width: 45%;
+}
+
+.notes-title {
+  color: white;
+  font-size: 20px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+/* Bloc À Faire */
+.tasks-box {
+  margin-top: 100px;
+  background-color: red;
+  padding: 20px;
+  border-radius: 8px;
+  width: 45%;
+}
+
+.tasks-title {
+  color: white;
+  font-size: 20px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+/* Cartes */
+.card {
+  background-color: white;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 10px;
+}
+
+/* Notes */
+.grade {
+  padding: 5px 10px;
+  border-radius: 50%;
+  display: inline-block;
+  color: white;
+}
+
+.green {
+  background-color: green;
+}
+
+.red {
+  background-color: red;
+}
+
+/* Date des tâches */
+.task-date {
+  background-color: red;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+}
+
+/* Boutons */
+.button {
+  background-color: #444;
+  color: white;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  width: 100%;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.button:hover {
+  background-color: #333;
+}
+
+.calendar-icon {
+  font-size: 16px;
+  vertical-align: middle;
+  margin-right: 5px;
+}

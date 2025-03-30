@@ -4,9 +4,11 @@ import "./App.css";
 import img1 from "./assets/img1.jpg";
 import img2 from "./assets/img2.jpg";
 import img3 from "./assets/img3.jpg";
+import Dashboard from "./pages/Dashboard";
+
 
 function App() {
-  const navigate = useNavigate(); // Hook pour la navigation
+  const navigate = useNavigate(); // Hook pour la navigationnavigation
   const images = [img1, img2, img3];
   const [currentImage, setCurrentImage] = useState(0);
 

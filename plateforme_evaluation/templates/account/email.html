@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Gestion des emails - Plateforme d'Évaluation{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-8">
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+        <!-- Menu latéral -->
+        <div class="md:flex">
+            <div class="md:w-1/4 bg-gray-50 p-4">
+                <h2 class="text-lg font-semibold mb-4 text-gray-800">Menu</h2>
+                <ul class="space-y-2">
+                    <li>
+                        <a href="{% url 'account_email' %}" class="block px-3 py-2 bg-blue-100 text-blue-800 rounded font-medium">
+                            Changer d'e-mail
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'account_change_password' %}" class="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded">
+                            Modifier le mot de passe
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'socialaccount_connections' %}" class="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded">
+                            Comptes associés
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'account_logout' %}" class="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded">
+                            Se déconnecter
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Contenu principal -->
+            <div class="md:w-3/4 p-6">
+                <h1 class="text-2xl font-bold text-gray-800 mb-6">Adresses e-mail</h1>
+                
+                <p class="text-gray-600 mb-6">
+                    Les adresses e-mail suivantes sont associées à votre compte :
+                </p>
+
+                {% if user.emailaddress_set.all %}
+                <ul class="space-y-4 mb-8">
+                    {% for emailaddress in user.emailaddress_set.all %}
+                    <li class="border border-gray-200 rounded-lg p-4">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <span class="font-medium text-gray-800">{{ emailaddress.email }}</span>
+                                {% if not emailaddress.verified %}
+                                <span class="ml-2 bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs">Non vérifiée</span>
+                                {% endif %}
+                                {% if emailaddress.primary %}
+                                <span class="ml-2 bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Principale</span>
+                                {% endif %}
+                            </div>
+                            <div class="flex space-x-2">
+                                {% if not emailaddress.primary %}
+                                <form method="post" action="{% url 'account_email' %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="email" value="{{ emailaddress.email }}">
+                                    <input type="hidden" name="action_primary" value="true">
+                                    <button type="submit" class="text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded hover:bg-blue-200">
+                                        Rendre principale
+                                    </button>
+                                </form>
+                                {% endif %}
+                                
+                                {% if not emailaddress.verified %}
+                                <form method="post" action="{% url 'account_email' %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="email" value="{{ emailaddress.email }}">
+                                    <input type="hidden" name="action_send" value="true">
+                                    <button type="submit" class="text-xs bg-yellow-100 text-yellow-800 px-3 py-1 rounded hover:bg-yellow-200">
+                                        Renvoyer la vérification
+                                    </button>
+                                </form>
+                                {% endif %}
+                                
+                                <form method="post" action="{% url 'account_email' %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="email" value="{{ emailaddress.email }}">
+                                    <input type="hidden" name="action_remove" value="true">
+                                    <button type="submit" class="text-xs bg-red-100 text-red-800 px-3 py-1 rounded hover:bg-red-200">
+                                        Retirer
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-gray-500 mb-8">Aucune adresse email associée.</p>
+                {% endif %}
+
+                <!-- Formulaire d'ajout d'email -->
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">Ajouter une adresse e-mail</h2>
+                <form method="post" action="{% url 'account_email' %}" class="space-y-4">
+                    {% csrf_token %}
+                    
+                    {% if form.errors %}
+                    <div class="bg-red-50 text-red-800 p-3 rounded mb-4">
+                        {% for field, errors in form.errors.items %}
+                            {% for error in errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <div>
+                        <label for="id_email" class="block text-gray-700 font-medium mb-1">E-mail :</label>
+                        <input type="email" name="email" id="id_email" required
+                               class="w-full px-4 py-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+                               placeholder="Adresse e-mail">
+                    </div>
+                    
+                    <div class="flex justify-end">
+                        <button type="submit" name="action_add" 
+                                class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+                            Ajouter un e-mail
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

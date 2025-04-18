@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h2 class="mb-0">
+                <i class="fas fa-check-circle mr-2"></i>
+                Noter la soumission : {{ submission.exercise.title }}
+            </h2>
+        </div>
+        <div class="card-body">
+            <div class="mb-4">
+                <h5 class="card-title">
+                    <i class="fas fa-user-graduate mr-2"></i>
+                    Étudiant : {{ submission.student.get_full_name }}
+                </h5>
+                <p class="text-muted">
+                    <i class="fas fa-calendar-alt mr-2"></i>
+                    Soumis le : {{ submission.submission_date|date:"d/m/Y H:i" }}
+                </p>
+            </div>
+
+            <!-- Section Correction Automatique -->
+            {% if not submission.grade and not submission.feedback %}
+            <div class="mb-4 border p-3 rounded bg-light">
+                <h4 class="mb-3">
+                    <i class="fas fa-robot mr-2 text-info"></i>
+                    Correction Automatique
+                </h4>
+                
+                <button id="auto-correct-btn" class="btn btn-info mb-2">
+                    <i class="fas fa-magic mr-2"></i>Lancer la correction automatique
+                </button>
+                
+                <div id="auto-correct-loading" class="d-none mt-3">
+                    <div class="spinner-border text-info" role="status">
+                        <span class="sr-only">Chargement...</span>
+                    </div>
+                    <span class="ml-2">Analyse en cours (1-2 minutes)...</span>
+                </div>
+                
+                <div id="auto-correct-result" class="mt-3 d-none">
+                    <div class="card border-info">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-lightbulb mr-2"></i>
+                                Résultat de la correction
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="auto-feedback-content" class="feedback-content"></div>
+                        </div>
+                    </div>
+                    <div class="alert alert-success mt-2">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        Vous pouvez ajuster la note et les commentaires avant validation.
+                    </div>
+                </div>
+                
+                <div id="auto-correct-error" class="alert alert-danger mt-3 d-none">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    <span id="error-message"></span>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Formulaire de Notation -->
+            <div class="card mt-4">
+                <div class="card-header bg-secondary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-edit mr-2"></i>
+                        Évaluation Manuelle
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+                        
+                        <div class="form-group mt-4">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save mr-2"></i>Enregistrer la note
+                            </button>
+                            <a href="{% url 'submission-detail' pk=submission.pk %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times mr-2"></i>Annuler
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Script pour la correction automatique -->
+{% if not submission.grade and not submission.feedback %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const autoCorrectBtn = document.getElementById('auto-correct-btn');
+    const loadingDiv = document.getElementById('auto-correct-loading');
+    const resultDiv = document.getElementById('auto-correct-result');
+    const errorDiv = document.getElementById('auto-correct-error');
+    
+    autoCorrectBtn.addEventListener('click', function() {
+        // Réinitialiser les messages
+        resultDiv.classList.add('d-none');
+        errorDiv.classList.add('d-none');
+        
+        // Afficher le chargement
+        autoCorrectBtn.disabled = true;
+        autoCorrectBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Traitement en cours...';
+        loadingDiv.classList.remove('d-none');
+        
+        fetch("{% url 'auto-correct-submission' submission.pk %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => { throw err; });
+            }
+            return response.json();
+        })
+        .then(data => {
+            loadingDiv.classList.add('d-none');
+            
+            if (data.status === 'success') {
+                // Formater le feedback
+                const formattedFeedback = data.auto_feedback.replace(/\n/g, '<br>');
+                document.getElementById('auto-feedback-content').innerHTML = formattedFeedback;
+                resultDiv.classList.remove('d-none');
+                
+                // Pré-remplir le formulaire
+                if (data.auto_grade && data.auto_grade !== 'None') {
+                    document.getElementById('id_grade').value = parseFloat(data.auto_grade).toFixed(2);
+                }
+                if (data.auto_feedback) {
+                    document.getElementById('id_feedback').value = data.auto_feedback;
+                }
+                
+                // Scroll vers le résultat
+                resultDiv.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                throw new Error(data.message || 'Erreur inconnue');
+            }
+        })
+        .catch(error => {
+            loadingDiv.classList.add('d-none');
+            document.getElementById('error-message').textContent = 
+                error.message || 'Erreur lors de la correction automatique. Formats supportés: PDF, Word (.docx), TXT.';
+            errorDiv.classList.remove('d-none');
+        })
+        .finally(() => {
+            autoCorrectBtn.disabled = false;
+            autoCorrectBtn.innerHTML = '<i class="fas fa-robot mr-2"></i>Lancer la correction automatique';
+        });
+    });
+});
+</script>
+
+<style>
+.feedback-content {
+    white-space: pre-line;
+    line-height: 1.6;
+}
+.card-header {
+    font-weight: 600;
+}
+</style>
+{% endif %}
+{% endblock %}

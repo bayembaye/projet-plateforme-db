@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}{% if form.instance.pk %}Modifier{% else %}Créer{% endif %} un groupe d'exercices{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-4xl">
+    <div class="bg-white p-6 rounded-lg shadow-md">
+        <h1 class="text-2xl font-bold mb-6">
+            {% if form.instance.pk %}Modifier le groupe{% else %}Créer un nouveau groupe{% endif %}
+        </h1>
+
+        <form method="post" enctype="multipart/form-data" action="{% url 'submission-create' exercise_id=exercise.id %}">
+            {% csrf_token %}
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Colonne gauche -->
+                <div class="space-y-4">
+                    <!-- Titre -->
+                    <div>
+                        <label class="block text-gray-700 mb-2">Titre du groupe*</label>
+                        {{ form.title }}
+                    </div>
+
+                    <!-- Description -->
+                    <div>
+                        <label class="block text-gray-700 mb-2">Description</label>
+                        {{ form.description }}
+                    </div>
+                </div>
+
+                <!-- Colonne droite -->
+                <div class="space-y-4">
+                    <!-- Dates -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-gray-700 mb-2">Date de début*</label>
+                            {{ form.start_date }}
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 mb-2">Date de fin*</label>
+                            {{ form.end_date }}
+                        </div>
+                    </div>
+
+                    <!-- Exercices -->
+                    <div>
+                        <label class="block text-gray-700 mb-2">Exercices inclus*</label>
+                        {{ form.exercises }}
+                        <p class="text-gray-500 text-sm mt-1">Maintenez Ctrl/Cmd pour sélectionner plusieurs exercices</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-4 mt-8 pt-6 border-t">
+                <a href="{% if form.instance.pk %}{% url 'exercise-detail' form.instance.pk %}{% else %}{% url 'exercise-list' %}{% endif %}" 
+                   class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition">
+                    Annuler
+                </a>
+                <button type="submit" 
+                        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+                    {% if form.instance.pk %}Mettre à jour{% else %}Créer{% endif %} le groupe
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Style pour le select multiple -->
+<style>
+    select[multiple] {
+        min-height: 150px;
+        width: 100%;
+    }
+</style>
+{% endblock %}

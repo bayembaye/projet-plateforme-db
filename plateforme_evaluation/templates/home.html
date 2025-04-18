@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}Accueil - Plateforme d'Évaluation{% endblock %}
+
+{% block content %}
+<div class="min-h-screen">
+    <!-- Hero Section avec le nouveau dégradé -->
+    <div class="bg-gradient-to-br from-green-500 via-teal-600 to-blue-700 text-white py-16">
+        <div class="container mx-auto px-4 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold mb-6">Plateforme d'Évaluation Automatisée</h1>
+            <p class="text-xl mb-8 max-w-3xl mx-auto">
+                Solution complète pour la création, soumission et correction d'exercices en bases de données
+            </p>
+
+            <!-- Nouvelle citation sur les bases de données -->
+            <div class="max-w-4xl mx-auto mb-8 p-6 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
+                <blockquote class="text-xl italic">
+                    "Une base de données bien conçue est comme une ville bien organisée : chaque donnée a sa place, chaque relation son chemin, et l'information circule sans entrave."
+                </blockquote>
+            </div>
+
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'exercise-list' %}" class="btn-primary">
+                        Voir les exercices
+                    </a>
+                    <a href="{% url 'account_profile' %}" class="btn-secondary">
+                        Mon profil
+                    </a>
+                {% else %}
+                    <a href="{% url 'account_login' %}" class="btn-primary">
+                        Se connecter
+                    </a>
+                    <a href="{% url 'account_signup' %}" class="btn-secondary">
+                        Créer un compte
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Section (contenu d'origine conservé) -->
+    <div class="container mx-auto px-4 py-16">
+        <h2 class="text-3xl font-bold text-center mb-12">Fonctionnalités Clés</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Feature 1 -->
+            <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition dark:bg-gray-800">
+                <div class="text-blue-500 mb-4">
+                    <svg class="w-10 h-10 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-semibold mb-3 text-center dark:text-white">Exercices Variés</h3>
+                <p class="text-gray-600 dark:text-gray-300">
+                    Accédez à des exercices couvrant tous les aspects des bases de données relationnelles.
+                </p>
+            </div>
+
+            <!-- Feature 2 -->
+            <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition dark:bg-gray-800">
+                <div class="text-blue-500 mb-4">
+                    <svg class="w-10 h-10 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-semibold mb-3 text-center dark:text-white">Correction Automatique</h3>
+                <p class="text-gray-600 dark:text-gray-300">
+                    Bénéficiez d'une correction instantanée grâce à notre système intelligent basé sur l'IA.
+                </p>
+            </div>
+
+            <!-- Feature 3 -->
+            <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition dark:bg-gray-800">
+                <div class="text-blue-500 mb-4">
+                    <svg class="w-10 h-10 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-semibold mb-3 text-center dark:text-white">Suivi des Progrès</h3>
+                <p class="text-gray-600 dark:text-gray-300">
+                    Visualisez votre évolution grâce à des tableaux de bord détaillés et des statistiques.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Exercises Section (contenu d'origine conservé) -->
+    <div class="bg-gray-100 dark:bg-gray-800 py-16">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-12 dark:text-white">Exercices Récents</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for exercise in recent_exercises %}
+                <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition dark:bg-gray-700">
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-xl font-semibold dark:text-white">{{ exercise.title }}</h3>
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs dark:bg-blue-200">
+                                {{ exercise.get_difficulty_level_display }}
+                            </span>
+                        </div>
+                        <p class="text-gray-600 mb-4 dark:text-gray-300">{{ exercise.description|truncatechars:100 }}</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-500 dark:text-gray-400">
+                                {{ exercise.created_at|date:"d/m/Y" }}
+                            </span>
+                            <a href="{% url 'exercise-detail' exercise.pk %}" class="text-blue-600 hover:underline dark:text-blue-400">
+                                Voir plus →
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-span-3 text-center py-8">
+                    <p class="text-gray-500 dark:text-gray-400">Aucun exercice disponible pour le moment.</p>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="text-center mt-8">
+                <a href="{% url 'exercise-list' %}" class="btn-primary">
+                    Voir tous les exercices
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Call to Action avec le nouveau dégradé -->
+    <div class="bg-gradient-to-r from-green-500 to-blue-600 text-white py-12">
+        <div class="container mx-auto px-4 text-center">
+            <h2 class="text-2xl md:text-3xl font-bold mb-6">Prêt à commencer ?</h2>
+            <p class="text-xl mb-8 max-w-3xl mx-auto">
+                Rejoignez notre plateforme et améliorez vos compétences en bases de données aujourd'hui.
+            </p>
+            {% if user.is_authenticated %}
+                <a href="{% url 'exercise-list' %}" class="btn-white">
+                    Accéder aux exercices
+                </a>
+            {% else %}
+                <a href="{% url 'account_signup' %}" class="btn-white">
+                    Créer un compte gratuit
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .btn-primary {
+        @apply bg-white text-blue-600 px-6 py-3 rounded-lg font-medium hover:bg-gray-100 transition dark:text-blue-700;
+    }
+    .btn-secondary {
+        @apply border-2 border-white px-6 py-3 rounded-lg font-medium hover:bg-white hover:text-blue-600 transition dark:hover:text-blue-700;
+    }
+    .btn-white {
+        @apply bg-white text-blue-700 px-8 py-4 rounded-lg font-bold text-lg hover:bg-gray-100 transition dark:text-blue-800;
+    }
+</style>
+{% endblock %}

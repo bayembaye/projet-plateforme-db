@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Mon Profil - Plateforme d'Évaluation{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+        <!-- En-tête du profil -->
+        <div class="bg-gradient-to-r from-green-500 via-teal-600 px-6 py-4 to-blue-700">
+            <h1 class="text-2xl font-bold">Mon Profil</h1>
+            <p class="text-blue-100">Gérez vos informations personnelles</p>
+        </div>
+        
+        <!-- Corps du profil -->
+        <div class="p-6">
+            <!-- Section Informations de base -->
+            <div class="mb-8">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800 border-b pb-2">Informations Personnelles</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <p class="text-gray-600">Nom complet</p>
+                        <p class="font-medium text-gray-800">{{ user.get_full_name|default:"Non spécifié" }}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600">Adresse email</p>
+                        <p class="font-medium text-gray-800">{{ user.email }}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600">Rôle</p>
+                        <p class="font-medium text-gray-800">
+                            {% if user.is_student %}
+                                <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">Étudiant</span>
+                            {% else %}
+                                <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">Professeur</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600">Date d'inscription</p>
+                        <p class="font-medium text-gray-800">{{ user.date_joined|date:"d/m/Y" }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section spécifique étudiant -->
+            {% if user.is_student and student_id %}
+            <div class="mb-8">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800 border-b pb-2">Informations Étudiant</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <p class="text-gray-600">Numéro étudiant</p>
+                        <p class="font-medium text-gray-800">{{ student_id }}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600">Niveau académique</p>
+                        <p class="font-medium text-gray-800">{{ academic_level|default:"Non spécifié" }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Section spécifique professeur -->
+            {% if user.is_professor and faculty_id %}
+            <div class="mb-8">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800 border-b pb-2">Informations Professeur</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <p class="text-gray-600">Numéro faculté</p>
+                        <p class="font-medium text-gray-800">{{ faculty_id }}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600">Département</p>
+                        <p class="font-medium text-gray-800">{{ department|default:"Non spécifié" }}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600">Spécialisation</p>
+                        <p class="font-medium text-gray-800">{{ specialization|default:"Non spécifié" }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Nouvelle section Tableaux de bord -->
+            <div class="mb-8">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800 border-b pb-2">Tableaux de bord</h2>
+                
+                {% if user.is_professor %}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <a href="{% url 'exercise-list' %}?professor={{ user.id }}" 
+                       class="bg-blue-50 p-4 rounded-lg hover:bg-blue-100 transition border border-blue-200">
+                        <h3 class="text-lg font-semibold text-blue-800 mb-2">Voir mes exercices</h3>
+                        <p class="text-blue-600">Consulter tous les exercices que j'ai créés</p>
+                    </a>
+                    <a href="{% url 'submission-list' %}" 
+                       class="bg-green-50 p-4 rounded-lg hover:bg-green-100 transition border border-green-200">
+                        <h3 class="text-lg font-semibold text-green-800 mb-2">Toutes les soumissions</h3>
+                        <p class="text-green-600">Voir les soumissions de mes étudiants</p>
+                    </a>
+                </div>
+                
+                <!-- Tableau de bord prof -->
+                <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                    <h3 class="font-semibold mb-3">Statistiques des soumissions</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="bg-white p-3 rounded shadow">
+                            <p class="text-sm text-gray-500">Total soumissions</p>
+                            <p class="text-2xl font-bold">{{ total_submissions }}</p>
+                        </div>
+                        <div class="bg-white p-3 rounded shadow">
+                            <p class="text-sm text-gray-500">Soumissions notées</p>
+                            <p class="text-2xl font-bold">{{ graded_submissions }}</p>
+                        </div>
+                        <div class="bg-white p-3 rounded shadow">
+                            <p class="text-sm text-gray-500">En révision</p>
+                            <p class="text-2xl font-bold">{{ under_review_submissions }}</p>
+                        </div>
+                        <div class="bg-white p-3 rounded shadow">
+                            <p class="text-sm text-gray-500">Moyenne générale</p>
+                            <p class="text-2xl font-bold">{{ average_grade|default:"-" }}/20</p>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <!-- Tableau de bord étudiant -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <a href="{% url 'submission-list' %}" 
+                       class="bg-blue-50 p-4 rounded-lg hover:bg-blue-100 transition border border-blue-200">
+                        <h3 class="text-lg font-semibold text-blue-800 mb-2">Mes soumissions</h3>
+                        <p class="text-blue-600">Voir toutes mes soumissions</p>
+                    </a>
+                    <a href="{% url 'exercise-list' %}" 
+                       class="bg-green-50 p-4 rounded-lg hover:bg-green-100 transition border border-green-200">
+                        <h3 class="text-lg font-semibold text-green-800 mb-2">Exercices disponibles</h3>
+                        <p class="text-green-600">Voir les exercices à rendre</p>
+                    </a>
+                </div>
+                
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h3 class="font-semibold mb-3">Mes statistiques</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                        <div class="bg-white p-3 rounded shadow">
+                            <p class="text-sm text-gray-500">Total exercices</p>
+                            <p class="text-2xl font-bold">{{ total_exercises }}</p>
+                        </div>
+                        <div class="bg-white p-3 rounded shadow">
+                            <p class="text-sm text-gray-500">Rendus</p>
+                            <p class="text-2xl font-bold">{{ submitted_exercises }}</p>
+                        </div>
+                        <div class="bg-white p-3 rounded shadow">
+                            <p class="text-sm text-gray-500">À rendre</p>
+                            <p class="text-2xl font-bold">{{ pending_exercises }}</p>
+                        </div>
+                        <div class="bg-white p-3 rounded shadow">
+                            <p class="text-sm text-gray-500">Moyenne</p>
+                            <p class="text-2xl font-bold">{{ student_average|default:"-" }}/20</p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Actions -->
+            <div class="mt-8 flex flex-wrap gap-4">
+                <a href="{% url 'account_change_password' %}" 
+                   class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+                    Changer le mot de passe
+                </a>
+                <a href="{% url 'account_email' %}" 
+                   class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition">
+                    Gérer les emails
+                </a>
+                {% if user.is_student %}
+                <a href="{% url 'student-profile-update' %}" 
+                   class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition">
+                    Modifier mon profil étudiant
+                </a>
+                {% else %}
+                <a href="{% url 'professor-profile-update' %}" 
+                   class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition">
+                    Modifier mon profil professeur
+                </a>
+                {% endif %}
+
+                {% if user.is_professor %}
+    <a href="{% url 'professor_stats' %}" class="px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 transition">
+        Voir les statistiques
+    </a>
+{% endif %}
+
+{% if user.is_student %}
+   
+        <a class="px-4 py-2 bg-cyan-600 text-white rounded hover:bg-cyan-700 transition" href="{% url 'student_performance' %}">
+           Mes Performances
+        </a>
+    </li>
+{% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

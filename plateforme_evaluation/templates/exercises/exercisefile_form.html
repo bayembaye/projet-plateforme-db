@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Ajouter un fichier à l'exercice{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-2xl">
+    <div class="bg-white p-6 rounded-lg shadow-md">
+        <h1 class="text-2xl font-bold mb-6">
+            {% if form.instance.pk %}Modifier{% else %}Ajouter{% endif %} un fichier
+            <span class="block text-lg font-normal text-gray-600 mt-1">
+                Pour l'exercice : {{ exercise.title }}
+            </span>
+        </h1>
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="space-y-4">
+                <!-- Champ Fichier -->
+                <div>
+                    <label class="block text-gray-700 mb-2">Fichier*</label>
+                    {{ form.file }}
+                    {% if form.file.errors %}
+                        <p class="text-red-500 text-sm mt-1">{{ form.file.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Champ Nom du fichier -->
+                <div>
+                    <label class="block text-gray-700 mb-2">Nom du fichier*</label>
+                    {{ form.file_name }}
+                    <p class="text-gray-500 text-sm mt-1">Ex: "Énoncé principal", "Schéma de base"</p>
+                </div>
+
+                <!-- Champ Type de fichier -->
+                <div>
+                    <label class="block text-gray-700 mb-2">Type de fichier*</label>
+                    {{ form.file_type }}
+                </div>
+
+                <!-- Checkbox Énoncé principal -->
+                <div class="flex items-center">
+                    {{ form.is_statement }}
+                    <label class="ml-2 text-gray-700">Ce fichier est l'énoncé principal</label>
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-4 mt-8 pt-6 border-t">
+                <a href="{% url 'exercise-detail' exercise.id %}" 
+                   class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition">
+                    Annuler
+                </a>
+                <button type="submit" 
+                        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+                    {% if form.instance.pk %}Mettre à jour{% else %}Ajouter{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

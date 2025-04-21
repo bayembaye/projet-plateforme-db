@@ -15,6 +15,7 @@ urlpatterns = [
     path('performance/', include('accounts.urls')),
     path('notifications/', include('notifications.urls', namespace='notifications')),
     path('security/', include('security.urls')),
+    path('plagiarism/', include('plagiarism.urls')),
 ]
 # Servir les fichiers media en développements
 if settings.DEBUG:

@@ -508,6 +508,16 @@ def submission_notification(sender, instance, created, **kwargs):
                 verb=_("Contestation de note"),
                 description=_(f"Un étudiant conteste sa note pour l'exercice '{instance.exercise.title}'"),
                 target=instance
-            )     
+            )   
+
+
+def get_plagiarism_scans(self):
+    from plagiarism.models import PlagiarismScan
+    return PlagiarismScan.objects.filter(submission=self).order_by('-created_at')
+
+@property
+def plagiarism_score(self):
+    scan = self.get_plagiarism_scans().first()
+    return scan.similarity_score if scan else None              
     
 

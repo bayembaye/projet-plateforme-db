@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'mathfilters',
     'notifications',
     'security.apps.SecurityConfig',
+    'plagiarism',
     
     ]
 
@@ -65,13 +66,17 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-     'allauth.account.middleware.AccountMiddleware',  # Ajoutez cette ligne
-     'django.contrib.messages.middleware.MessageMiddleware',
+    'allauth.account.middleware.AccountMiddleware',  # Ajoutez cette ligne
+    'plagiarism.middleware.PlagiarismAuthMiddleware', 
+    'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
 ROOT_URLCONF = 'plateforme_evaluation.urls'
-
+LOGIN_URL = '/accounts/login/'
+LOGIN_REDIRECT_URL = '/'
+ACCOUNT_LOGIN_ON_PASSWORD_RESET = True
+ACCOUNT_SESSION_REMEMBER = True
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -117,7 +122,38 @@ DATABASES = {
 #         'PORT': '5432',
 #     }
 # }
+# settings.py
+import logging
 
+# Configuration des logs
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': 'debug.log',
+        },
+    },
+    'loggers': {
+        'plagiarism': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+        },
+    },
+}
+
+# Configuration scikit-learn
+try:
+    import sklearn
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    HAS_SKLEARN = True
+except ImportError:
+    HAS_SKLEARN = False
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -137,7 +173,8 @@ AUTH_PASSWORD_VALIDATORS = [
 # settings.py
 # settings.py
 SECURITY_JSON_ENCODER = 'security.utils.json.SecurityJSONEncoder'
-SECURITY_ENCRYPTION_KEY = b'0e2Auzcv3cNLIzeLe1fkQp2ai_qyUl1-ITskNMxixG0='
+# settings.py
+SECURITY_ENCRYPTION_KEY = b'Va5BhsyhY_wDATnw5aJ9vAgH1Bxw5SitsIl7BDadeY4='
 # Internationalization
 LANGUAGE_CODE = 'fr-fr'
 TIME_ZONE = 'Europe/Paris'
@@ -262,7 +299,13 @@ EMAIL_HOST_PASSWORD = 'yourpassword'
 DEFAULT_FROM_EMAIL = 'your@email.com'
 ACCOUNT_EMAIL_VERIFICATION = 'none'  # Not recommended for production
 
+# settings.py
+import os
 
+# Configuration pour python-magic sur Windows
+if os.name == 'nt':  # Windows
+    MAGIC_FILE = '/usr/share/misc/magic'
+    
 
 # settings.py
 # Ollama Configuration
@@ -325,3 +368,6 @@ DATABASES = {
         }
     }
 }
+
+
+

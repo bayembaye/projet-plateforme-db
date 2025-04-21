@@ -64,3 +64,27 @@
     </div>
 </div>
 {% endblock %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Vérifie si nous avons un paramètre next et que c'est une URL de plagiat
+        const urlParams = new URLSearchParams(window.location.search);
+        const nextParam = urlParams.get('next');
+        
+        if (nextParam && nextParam.includes('/plagiarism/')) {
+            // Stocke l'URL originale avant soumission du formulaire
+            const loginForm = document.querySelector('form');
+            if (loginForm) {
+                loginForm.addEventListener('submit', function() {
+                    sessionStorage.setItem('plagiarism_redirect', nextParam);
+                });
+            }
+            
+            // Après login, redirige vers l'URL originale
+            if (sessionStorage.getItem('plagiarism_redirect')) {
+                window.location.href = sessionStorage.getItem('plagiarism_redirect');
+                sessionStorage.removeItem('plagiarism_redirect');
+            }
+        }
+    });
+    </script>

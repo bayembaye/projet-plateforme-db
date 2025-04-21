@@ -5,18 +5,17 @@ from django.contrib.auth import get_user_model
 from exercises.models import Exercise
 from django_fsm import FSMField, transition
 import uuid
+import tempfile
 import os
+import logging
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
-from django.db import models
+from security.services.encryption import FileEncryptor, EncryptionError
+from cryptography.fernet import InvalidToken
+from cryptography.fernet import InvalidToken
+import tempfile
+import os
 from django.core.exceptions import ValidationError
-from security.services.encryption import FileEncryptor
-
-from django.utils import timezone
-from django.utils.translation import gettext_lazy as _
-from security.models import SecurityEvent
-from security.services.encryption import FileEncryptor
-import logging
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
@@ -127,8 +126,6 @@ class Submission(models.Model):
     def __str__(self):
         return f"{self.student.get_full_name()} - {self.exercise.title} ({self.get_status_display()})"
 
-
-
     # Transitions d'état
     @transition(
         field=status,
@@ -235,46 +232,147 @@ class Submission(models.Model):
     def _encrypt_uploaded_file(self):
         """Chiffre le fichier uploadé"""
         try:
-            from security.services.encryption import FileEncryptor
             encryptor = FileEncryptor()
             encryptor.encrypt_file(self.file.path)
         except Exception as e:
             logger.error(f"Failed to encrypt submission file {self.file.path}: {str(e)}")
             # On ne rollback pas la sauvegarde mais on log l'erreur
 
-    def get_decrypted_file(self):
-        """
-        Retourne un fichier temporaire déchiffré.
-        Attention: le fichier doit être supprimé après usage.
-        """
-        if not hasattr(self.file, 'path'):
-            return None
-            
+    def decrypt_file(self, input_path, output_path=None):
+        """Déchiffre un fichier avec gestion robuste des erreurs"""
+        if not os.path.exists(input_path):
+            logger.error(f"File not found: {input_path}")
+            raise FileNotFoundError(f"File not found: {input_path}")
+
+        output_path = output_path or input_path + '.dec'
+        temp_path = output_path + '.tmp'
+
         try:
-            from security.services.encryption import FileEncryptor
-            import tempfile
-            
             encryptor = FileEncryptor()
-            fd, temp_path = tempfile.mkstemp(suffix=os.path.splitext(self.file.name)[1])
-            os.close(fd)
-            
-            decrypt_path = encryptor.decrypt_file(self.file.path, temp_path)
-            return open(decrypt_path, 'rb')
-            
-        except Exception as e:
-            logger.error(f"Failed to decrypt submission file {self.file.path}: {str(e)}")
+            with open(input_path, 'rb') as f:
+                encrypted_data = f.read()
+                if not encrypted_data:
+                    logger.error(f"Empty file: {input_path}")
+                    raise EncryptionError("Empty file")
+
+            try:
+                decrypted_data = encryptor.cipher.decrypt(encrypted_data)
+            except InvalidToken as e:
+                logger.error(f"Invalid token or corrupted file: {input_path}")
+                raise EncryptionError("Invalid key or corrupted file") from e
+
+            with open(temp_path, 'wb') as f:
+                f.write(decrypted_data)
+
+            os.replace(temp_path, output_path)
+            return output_path
+
+        except EncryptionError:
             if os.path.exists(temp_path):
                 os.remove(temp_path)
-            return None
+            raise
+        except Exception as e:
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+            logger.error(f"Unexpected error during decryption: {str(e)}")
+            raise EncryptionError(f"Decryption failed: {str(e)}") from e
+
+   
+
+
+    def get_decrypted_file(self):
+        """Retourne un fichier temporaire déchiffré"""
+        if not self.file:
+            raise ValidationError("No file attached")
+
+        temp_path = None
+        try:
+            encryptor = FileEncryptor()
+            
+            # Créer un fichier temporaire avec la bonne extension
+            file_ext = os.path.splitext(self.file.name)[1]
+            fd, temp_path = tempfile.mkstemp(suffix=file_ext)
+            os.close(fd)
+
+            # Déchiffrer le fichier
+            decrypt_path = encryptor.decrypt_file(self.file.path, temp_path)
+            
+            # Retourner le fichier déchiffré
+            return open(decrypt_path, 'rb')
+            
+        except InvalidToken:
+            raise ValidationError("Invalid encryption key - please check SECURITY_ENCRYPTION_KEY in settings")
+        except Exception as e:
+            if temp_path and os.path.exists(temp_path):
+                os.remove(temp_path)
+            raise ValidationError(f"File decryption failed: {str(e)}")
 
     def get_file_content(self):
-        """Retourne le contenu déchiffré sous forme de bytes"""
-        decrypted_file = self.get_decrypted_file()
-        if decrypted_file:
+        """Version robuste avec gestion du chiffrement"""
+        try:
+            if not self.file:
+                return None
+
+            with self.file.open('rb') as f:
+                content = f.read()
+
+            # Tentative de déchiffrement
             try:
-                return decrypted_file.read()
-            finally:
-                decrypted_file.close()
-                os.remove(decrypted_file.name)
-        return None
+                encryptor = FileEncryptor()
+                return encryptor.cipher.decrypt(content)
+            except InvalidToken:
+                return content  # Non chiffré
+                
+        except Exception as e:
+            logger.error(f"Erreur lecture fichier: {str(e)}")
+            return None
     
+    def get_plagiarism_scans(self):
+        from plagiarism.models import PlagiarismScan
+        return PlagiarismScan.objects.filter(submission=self).order_by('-created_at')
+
+    @property
+    def plagiarism_score(self):
+        scan = self.get_plagiarism_scans().first()
+        return scan.similarity_score if scan else None    
+    
+    def get_decrypted_content(self):
+        """Nouvelle méthode pour récupérer le contenu déchiffré"""
+        from security.services.encryption import FileEncryptor
+        try:
+            encryptor = FileEncryptor()
+            return encryptor.decrypt_content(self.file.read())
+        except Exception as e:
+            logger.error(f"DECRYPT ERROR: {str(e)}")
+            return None    
+    
+    def get_text_content(self):
+        """Retourne le texte décodé du fichier avec gestion robuste de l'encodage"""
+        try:
+            content = self.get_file_content()
+            if not content:
+                return ""
+            
+            # Fallback simple si chardet n'est pas installé
+            try:
+                from chardet import detect
+                encoding = detect(content)['encoding'] or 'latin-1'
+            except ImportError:
+                encoding = 'latin-1'  # Encodage plus permissif
+            
+            return content.decode(encoding, errors='replace')
+        except Exception as e:
+            logger.error(f"Erreur décodage fichier {self.id}: {str(e)}")
+            return ""
+    
+    def is_valid_encrypted_file(self, file_path):
+        """Vérifie si un fichier peut être déchiffré avec la clé actuelle"""
+        try:
+            encryptor = FileEncryptor()
+            with open(file_path, 'rb') as f:
+                data = f.read()
+            # Juste vérifier si le fichier peut être déchiffré, sans écrire le résultat
+            encryptor.cipher.decrypt(data)
+            return True
+        except Exception:
+            return False

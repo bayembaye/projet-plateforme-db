@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 {% load humanize %}
 
+{% load plagiarism_tags %}
+
+
 {% block content %}
 <div class="container mx-auto px-4 py-8">
     <div class="bg-white rounded-lg shadow-md overflow-hidden">
@@ -222,6 +225,66 @@
             </svg>
             Retour
         </a>
+    </div>
+    <div class="card mt-4">
+        <div class="card-header bg-primary text-white">
+            <h5>Analyse de Plagiat</h5>
+        </div>
+        <div class="card-body">
+            {% if submission.plagiarism_scans.exists %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Score</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for scan in submission.plagiarism_scans.all %}
+                            <tr>
+                                <td>{{ scan.created_at|date:"SHORT_DATETIME_FORMAT" }}</td>
+                                <td>{{ scan.get_scan_type_display }}</td>
+                                <td>
+                                    <span class="badge bg-{{ scan.similarity_score|score_color }}">
+                                        {{ scan.similarity_score|default:"N/A" }}%
+                                    </span>
+                                </td>
+                                <td>{{ scan.get_status_display }}</td>
+                                <td>
+                                    <a href="{% url 'plagiarism:scan-detail' pk=scan.id %}" 
+                                       class="btn btn-sm btn-info">
+                                        Détails
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-warning">
+                    Aucune analyse de plagiat disponible pour cette soumission.
+                </div>
+            {% endif %}
+    
+            {% if request.user.is_professor %}
+                <form method="post" action="{% url 'plagiarism:start-scan' submission_id=submission.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary mt-3">
+                        <i class="fas fa-search"></i> Lancer un nouveau scan
+                    </button>
+                    <select name="scan_type" class="form-select d-inline-block w-auto">
+                        <option value="INTERNAL">Base interne</option>
+                        <option value="WEB">Web</option>
+                        <option value="BOTH" selected>Complet</option>
+                    </select>
+                </form>
+            {% endif %}
+        </div>
     </div>
 </div>
 {% endblock %}

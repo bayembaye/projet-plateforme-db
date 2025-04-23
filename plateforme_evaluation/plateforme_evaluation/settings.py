@@ -41,11 +41,10 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.microsoft',
     
     # Local apps
-    
     'exercises',
     'submissions',
     'evaluation',
-    'pages.apps.PagesConfig',  # Nouvelle application
+    'pages.apps.PagesConfig',
     'django_fsm',
     'django.contrib.humanize',
     'crispy_forms',
@@ -54,8 +53,8 @@ INSTALLED_APPS = [
     'notifications',
     'security.apps.SecurityConfig',
     'plagiarism',
-    
-    ]
+    'channels',
+]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -66,17 +65,26 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'allauth.account.middleware.AccountMiddleware',  # Ajoutez cette ligne
-    'plagiarism.middleware.PlagiarismAuthMiddleware', 
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
+    'plagiarism.middleware.PlagiarismAuthMiddleware',
 ]
 
 ROOT_URLCONF = 'plateforme_evaluation.urls'
 LOGIN_URL = '/accounts/login/'
-LOGIN_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = 'account_profile'
+ACCOUNT_SIGNUP_REDIRECT_URL = 'account_profile'
 ACCOUNT_LOGIN_ON_PASSWORD_RESET = True
 ACCOUNT_SESSION_REMEMBER = True
+
+# Static files configuration - UNIFIED
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# Media files
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -92,15 +100,20 @@ TEMPLATES = [
         },
     },
 ]
-# Config ASGI
-ASGI_APPLICATION = 'your_project.routing.application'
 
-# Configuration des canaux (Channel Layers)
+# ASGI configuration
+ASGI_APPLICATION = 'plateforme_evaluation.asgi.application'
+
+# Channel Layers configuration
 CHANNEL_LAYERS = {
     "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer",
-    }
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],
+        },
+    },
 }
+
 WSGI_APPLICATION = 'plateforme_evaluation.wsgi.application'
 
 # Database
@@ -108,38 +121,45 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+        'OPTIONS': {
+            'timeout': 20,
+            'detect_types': 3,  # Active PARSE_DECLTYPES | PARSE_COLNAMES
+        }
     }
 }
 
-# Pour passer à PostgreSQL en production, décommentez et configurez :
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'plateforme_evaluation',
-#         'USER': 'postgres',
-#         'PASSWORD': 'password',
-#         'HOST': 'localhost',
-#         'PORT': '5432',
-#     }
-# }
-# settings.py
-import logging
-
-# Configuration des logs
+# Logging configuration
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
+            'formatter': 'simple',
         },
         'file': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
-            'filename': 'debug.log',
+            'filename': os.path.join(BASE_DIR, 'debug.log'),
+            'formatter': 'verbose',
         },
     },
     'loggers': {
+        'django': {
+            'handlers': ['file', 'console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
         'plagiarism': {
             'handlers': ['console', 'file'],
             'level': 'DEBUG',
@@ -147,13 +167,14 @@ LOGGING = {
     },
 }
 
-# Configuration scikit-learn
+# scikit-learn configuration
 try:
     import sklearn
     from sklearn.feature_extraction.text import TfidfVectorizer
     HAS_SKLEARN = True
 except ImportError:
     HAS_SKLEARN = False
+
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -169,26 +190,16 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
-# Configuration sécurité
-# settings.py
-# settings.py
+
+# Security configuration
 SECURITY_JSON_ENCODER = 'security.utils.json.SecurityJSONEncoder'
-# settings.py
 SECURITY_ENCRYPTION_KEY = b'Va5BhsyhY_wDATnw5aJ9vAgH1Bxw5SitsIl7BDadeY4='
+
 # Internationalization
 LANGUAGE_CODE = 'fr-fr'
 TIME_ZONE = 'Europe/Paris'
 USE_I18N = True
 USE_TZ = True
-
-# Static files (CSS, JavaScript, Images)
-STATIC_URL = 'static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
-
-# Media files
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -205,9 +216,17 @@ SITE_ID = 1
 
 # Django AllAuth settings
 ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+ACCOUNT_EMAIL_VERIFICATION = 'none'  # Changed from 'mandatory' for development
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_UNIQUE_EMAIL = True
+ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+
+# Custom forms
+ACCOUNT_FORMS = {
+    'signup': 'accounts.forms.CustomSignupForm',
+}
 
 # REST Framework settings
 REST_FRAMEWORK = {
@@ -226,148 +245,62 @@ CORS_ALLOW_ALL_ORIGINS = True  # Change in production
 # File upload settings
 FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
 
-# Logging configuration
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {message}',
-            'style': '{',
-        },
-        'simple': {
-            'format': '{levelname} {message}',
-            'style': '{',
-        },
-    },
-    'handlers': {
-        'file': {
-            'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'debug.log'),
-            'formatter': 'verbose',
-        },
-        'console': {
-            'level': 'INFO',
-            'class': 'logging.StreamHandler',
-            'formatter': 'simple',
-        },
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['file', 'console'],
-            'level': 'INFO',
-            'propagate': True,
-        },
-    },
-}
-# settings.py
 # crispy_forms configuration
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
-# Redirections
-LOGIN_REDIRECT_URL = 'account_profile'  # Redirection après connexion
-ACCOUNT_SIGNUP_REDIRECT_URL = 'account_profile'  # Redirection après inscription
-
-# Configuration Allauth
-ACCOUNT_AUTHENTICATION_METHOD = 'email'
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_UNIQUE_EMAIL = True
-ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
-ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
-# For custom user model without username
-ACCOUNT_USER_MODEL_USERNAME_FIELD = None
-
-# Custom forms (if you're using them)
-ACCOUNT_FORMS = {
-    'signup': 'accounts.forms.CustomSignupForm',
-}
-
-# settings.py
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'path_to_your_existing_static_dir'),
-]
 
 # Email configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.yourprovider.com'  # e.g., smtp.gmail.com
-EMAIL_PORT = 587  # For TLS
+EMAIL_HOST = 'smtp.yourprovider.com'
+EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'your@email.com'
 EMAIL_HOST_PASSWORD = 'yourpassword'
 DEFAULT_FROM_EMAIL = 'your@email.com'
-ACCOUNT_EMAIL_VERIFICATION = 'none'  # Not recommended for production
 
-# settings.py
-import os
-
-# Configuration pour python-magic sur Windows
-if os.name == 'nt':  # Windows
+# python-magic configuration for Windows
+if os.name == 'nt':
     MAGIC_FILE = '/usr/share/misc/magic'
-    
 
-# settings.py
 # Ollama Configuration
 OLLAMA_HOST = "http://127.0.0.1:11434"
 OLLAMA_TIMEOUT = 60  # secondes
 
-
-# Formats supportés
+# Supported file types
 SUPPORTED_FILE_TYPES = {
     '.txt': 'text/plain',
     '.pdf': 'application/pdf',
     '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 }
 
-# Taille max des fichiers (10MB)
+# Max file size (10MB)
 MAX_UPLOAD_SIZE = 10 * 1024 * 1024
 
+# Social Account Providers
+# Au lieu d'utiliser os.environ.get directement
+from dotenv import load_dotenv
+import os
 
+# Charger les variables d'environnement
+load_dotenv()
 
-INSTALLED_APPS += ['channels']
-ASGI_APPLICATION = 'plateforme_evaluation.asgi.application'
-
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [("127.0.0.1", 6379)],
-        },
-    },
-}
-
-
+# Social Account Providers
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
         'SCOPE': ['profile', 'email'],
         'AUTH_PARAMS': {'access_type': 'online'},
-    },
-    # autres providers...
-}
-
-# Configuration Celery
-CELERY_BROKER_URL = 'redis://localhost:6379/0'  # Ou l'URL de votre broker
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = 'Europe/Paris'  # Ajustez à votre fuseau horaire
-
-
-
-# settings.py
-import sqlite3
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-        'OPTIONS': {
-            'timeout': 20,
-            'detect_types': 3,  # Active PARSE_DECLTYPES | PARSE_COLNAMES
+        'APP': {
+            'client_id': os.getenv('GOOGLE_CLIENT_ID'),
+            'secret': os.getenv('GOOGLE_CLIENT_SECRET'),
+            'key': ''
         }
     }
 }
 
-
-
+# Celery Configuration
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Europe/Paris'

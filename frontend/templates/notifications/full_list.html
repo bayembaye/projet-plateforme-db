@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="notifications-container">
+    <h1>Vos Notifications</h1>
+    
+    <div class="notification-actions">
+        <button id="mark-all-read" class="btn btn-secondary">
+            Marquer tout comme lu
+        </button>
+    </div>
+    
+    <div class="notification-list">
+        {% for notification in notifications %}
+        <div class="notification {% if notification.unread %}unread{% endif %}" data-id="{{ notification.id }}">
+            <div class="notification-header">
+                <strong>{{ notification.verb }}</strong>
+                <small class="text-muted">{{ notification.created_at|timesince }}</small>
+            </div>
+            <div class="notification-body">
+                <p>{{ notification.description }}</p>
+                {% if notification.target and notification.target.get_absolute_url %}
+                <a href="{{ notification.target.get_absolute_url }}" class="btn btn-sm btn-outline-primary">
+                    Voir détails
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="alert alert-info">
+            Vous n'avez aucune notification.
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Marquer toutes les notifications comme lues
+    document.getElementById('mark-all-read').addEventListener('click', function() {
+        fetch("{% url 'notifications:mark_all_read' %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({})
+        }).then(response => {
+            if (response.ok) {
+                document.querySelectorAll('.notification.unread').forEach(el => {
+                    el.classList.remove('unread');
+                });
+            }
+        });
+    });
+    
+    // Marquer une notification comme lue au clic
+    document.querySelectorAll('.notification').forEach(notification => {
+        notification.addEventListener('click', function() {
+            if (this.classList.contains('unread')) {
+                const notificationId = this.dataset.id;
+                fetch(`/notifications/${notificationId}/mark-read/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                    }
+                }).then(response => {
+                    if (response.ok) {
+                        this.classList.remove('unread');
+                    }
+                });
+            }
+        });
+    });
+});
+</script>
+
+<style>
+.notification {
+    padding: 15px;
+    margin-bottom: 10px;
+    border-left: 4px solid #ddd;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.notification.unread {
+    background-color: #f8f9fa;
+    border-left-color: #007bff;
+}
+.notification:hover {
+    background-color: #e9ecef;
+}
+.notification-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+}
+.notification-actions {
+    margin-bottom: 20px;
+}
+</style>
+{% endblock %}

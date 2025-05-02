@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<h1>Mes Notifications</h1>
+
+<div id="notifications-container">
+    {% for notification in notifications %}
+    <div class="notification {% if notification.unread %}unread{% endif %}">
+        {{ notification.verb }} - {{ notification.description }}
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Bouton pour rafraîchir le compteur -->
+<button id="refresh-count">Actualiser</button>
+
+<!-- Script AJAX pour le compteur non lu -->
+<script>
+    function fetchUnreadCount() {
+        fetch("{% url 'notifications:unread-count' %}")
+            .then(response => response.json())
+            .then(data => {
+                console.log("Nombre de notifications non lues :", data.count);
+                // Mettez à jour votre interface ici (ex: badge)
+                const badge = document.getElementById('notification-badge');
+                if (badge) {
+                    badge.textContent = data.count;
+                    badge.style.display = data.count > 0 ? 'block' : 'none';
+                }
+            })
+            .catch(error => console.error("Erreur :", error));
+    }
+
+    // Rafraîchir toutes les 30 secondes
+    setInterval(fetchUnreadCount, 30000);
+
+    // Bouton manuel
+    document.getElementById('refresh-count').addEventListener('click', fetchUnreadCount);
+
+    // Chargement initial
+    document.addEventListener('DOMContentLoaded', fetchUnreadCount);
+</script>
+{% endblock %}

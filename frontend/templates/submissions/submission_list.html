@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% load submission_tags %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-6">
+        {% if request.user.is_professor %}
+            Toutes les soumissions
+        {% else %}
+            Mes soumissions
+        {% endif %}
+    </h1>
+
+    <!-- Section Statistiques pour les étudiants -->
+    {% if not request.user.is_professor %}
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h2 class="text-xl font-semibold mb-4 text-gray-800 border-b pb-2">Mes statistiques</h2>
+        
+        <!-- Cartes de statistiques -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <p class="text-sm text-blue-600 mb-1">Total exercices</p>
+                <p class="text-2xl font-bold">{{ total_exercises }}</p>
+            </div>
+            
+            <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                <p class="text-sm text-green-600 mb-1">Exercices rendus</p>
+                <p class="text-2xl font-bold">{{ submitted_exercises }}</p>
+            </div>
+            
+            <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                <p class="text-sm text-yellow-600 mb-1">À rendre</p>
+                <p class="text-2xl font-bold">{{ pending_exercises }}</p>
+            </div>
+            
+            <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                <p class="text-sm text-purple-600 mb-1">Moyenne générale</p>
+                <p class="text-2xl font-bold">
+                    {% if average_grade %}
+                    <p class="text-2xl font-bold">
+                        {{ average_grade|floatformat:2 }}/20
+                    </p>
+                    {% else %}
+                        -
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+        
+        <!-- Graphiques -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Performance par catégorie -->
+            <div class="bg-white p-4 rounded-lg border border-gray-200">
+                <h3 class="font-medium mb-3">Performance par catégorie</h3>
+                <div class="h-64">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Répartition des feedbacks -->
+            <div class="bg-white p-4 rounded-lg border border-gray-200">
+                <h3 class="font-medium mb-3">Répartition des feedbacks</h3>
+                <div class="h-64">
+                    <canvas id="feedbackChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Liste des soumissions -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    {% if request.user.is_professor %}
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Étudiant</th>
+                    {% endif %}
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Exercice</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Catégorie</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Note</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for submission in submissions %}
+                <tr class="hover:bg-gray-50">
+                    {% if request.user.is_professor %}
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="text-sm font-medium text-gray-900">
+                                    {{ submission.student.get_full_name }}
+                                </div>
+                            </div>
+                        </td>
+                    {% endif %}
+                    
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">{{ submission.exercise.title }}</div>
+                    </td>
+                    
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
+                            {{ submission.exercise.category.name }}
+                        </span>
+                    </td>
+                    
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs rounded-full 
+                            {% if submission.status == 'graded' %}bg-green-100 text-green-800
+                            {% elif submission.status == 'submitted' %}bg-blue-100 text-blue-800
+                            {% elif submission.status == 'under_review' %}bg-yellow-100 text-yellow-800
+                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ submission.get_status_display }}
+                        </span>
+                    </td>
+                    
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        {% if submission.grade %}
+                            <span class="px-2 py-1 text-sm font-bold 
+                                {% if submission.grade >= 10 %}text-green-600{% else %}text-red-600{% endif %}">
+                                {{ submission.grade }}/20
+                            </span>
+                        {% else %}
+                            <span class="text-gray-500">-</span>
+                        {% endif %}
+                    </td>
+                    
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {{ submission.submission_date|date:"d/m/Y H:i" }}
+                    </td>
+                    
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <a href="{% url 'submission-detail' submission.id %}" class="text-blue-600 hover:text-blue-900 mr-3">
+                            Voir
+                        </a>
+                        {% if request.user.is_professor and submission.status == 'submitted' %}
+                        <a href="{% url 'grade-submission' submission.id %}" class="text-green-600 hover:text-green-900">
+                            Noter
+                        </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="{% if request.user.is_professor %}7{% else %}6{% endif %}" class="px-6 py-4 text-center text-gray-500">
+                        Aucune soumission trouvée
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="mt-4 flex justify-center">
+        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                    <span class="sr-only">Précédent</span>
+                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                </a>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <a href="?page={{ num }}" class="relative inline-flex items-center px-4 py-2 border border-blue-500 bg-blue-50 text-sm font-medium text-blue-600">
+                        {{ num }}
+                    </a>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <a href="?page={{ num }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        {{ num }}
+                    </a>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                    <span class="sr-only">Suivant</span>
+                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                    </svg>
+                </a>
+            {% endif %}
+        </nav>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Scripts pour les graphiques (uniquement pour les étudiants) -->
+{% if not request.user.is_professor %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Graphique de performance par catégorie
+    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+    const categoryChart = new Chart(categoryCtx, {
+        type: 'bar',
+        data: {
+            labels: [
+                {% for stat in category_stats %}
+                    '{{ stat.category__name }}',
+                {% endfor %}
+            ],
+            datasets: [{
+                label: 'Moyenne par catégorie',
+                data: [
+                    {% for stat in category_stats %}
+                        {{ stat.average_grade|default:0 }},
+                    {% endfor %}
+                ],
+                backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                borderColor: 'rgba(59, 130, 246, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 20,
+                    title: {
+                        display: true,
+                        text: 'Note moyenne'
+                    }
+                }
+            }
+        }
+    });
+
+    // Graphique de répartition des feedbacks
+    const feedbackCtx = document.getElementById('feedbackChart').getContext('2d');
+    const feedbackChart = new Chart(feedbackCtx, {
+        type: 'pie',
+        data: {
+            labels: ['Excellent', 'Très bien', 'Bien', 'Passable', 'Insuffisant'],
+            datasets: [{
+                data: [
+                    {{ feedback_distribution.Excellent|default:0 }},
+                    {{ feedback_distribution.Très_bien|default:0 }},
+                    {{ feedback_distribution.Bien|default:0 }},
+                    {{ feedback_distribution.Passable|default:0 }},
+                    {{ feedback_distribution.Insuffisant|default:0 }}
+                ],
+                backgroundColor: [
+                    'rgba(16, 185, 129, 0.7)',
+                    'rgba(101, 163, 13, 0.7)',
+                    'rgba(234, 179, 8, 0.7)',
+                    'rgba(249, 115, 22, 0.7)',
+                    'rgba(239, 68, 68, 0.7)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true
+        }
+    });
+});
+</script>
+{% endif %}
+{% endblock %}

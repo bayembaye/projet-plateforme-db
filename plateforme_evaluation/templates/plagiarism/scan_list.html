@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">
+                    <i class="fas fa-search me-2"></i>Historique des analyses
+                </h4>
+                <span class="badge bg-white text-primary">
+                    {{ page_obj.paginator.count }} analyses
+                </span>
+            </div>
+        </div>
+        
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="bg-light">
+                        <tr>
+                            <th width="25%">Soumission</th>
+                            <th class="text-center">Type</th>
+                            <th class="text-center">Score</th>
+                            <th class="text-center">Statut</th>
+                            <th class="text-center">Date</th>
+                            <th width="15%">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for scan in page_obj %}
+                        <tr class="{% if scan.status == 'failed' %}table-warning{% endif %}">
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        <i class="fas fa-file-alt fa-2x text-muted"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0">{{ scan.submission.exercise.title|truncatechars:20 }}</h6>
+                                        <small class="text-muted">{{ scan.submission.student.get_full_name }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge 
+                                    {% if scan.scan_type == 'INTERNAL' %}bg-info
+                                    {% elif scan.scan_type == 'WEB' %}bg-warning
+                                    {% else %}bg-success{% endif %}">
+                                    {{ scan.get_scan_type_display }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                {% if scan.similarity_score is not None %}
+                                <div class="progress" style="height: 25px;">
+                                    <div class="progress-bar 
+                                        {% if scan.similarity_score > 70 %}bg-danger
+                                        {% elif scan.similarity_score > 40 %}bg-warning
+                                        {% else %}bg-success{% endif %}" 
+                                        role="progressbar" 
+                                        style="width: {{ scan.similarity_score }}%"
+                                        aria-valuenow="{{ scan.similarity_score }}" 
+                                        aria-valuemin="0" 
+                                        aria-valuemax="100">
+                                        <strong>{{ scan.similarity_score }}%</strong>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <span class="badge bg-secondary">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <span class="badge 
+                                    {% if scan.status == 'completed' %}bg-success
+                                    {% elif scan.status == 'failed' %}bg-danger
+                                    {% else %}bg-primary{% endif %}">
+                                    {{ scan.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <small>{{ scan.created_at|date:"d/m/Y H:i" }}</small>
+                            </td>
+                            <td>
+                                <a href="{% url 'plagiarism:scan-detail' pk=scan.id %}" 
+                                   class="btn btn-sm btn-outline-primary me-1">
+                                   <i class="fas fa-eye"></i>
+                                </a>
+                                {% if request.user.is_professor %}
+                                <a href="{% url 'plagiarism:start-scan' submission_id=scan.submission.id %}" 
+                                   class="btn btn-sm btn-outline-secondary">
+                                   <i class="fas fa-redo"></i>
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    Aucune analyse disponible
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        {% if page_obj.paginator.num_pages > 1 %}
+        <div class="card-footer">
+            <div class="d-flex justify-content-center">
+                <nav aria-label="Pagination">
+                    <ul class="pagination">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1">
+                                <i class="fas fa-angle-double-left"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if num > page_obj.number|add:-3 and num < page_obj.number|add:3 %}
+                            <li class="page-item {% if num == page_obj.number %}active{% endif %}">
+                                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">
+                                <i class="fas fa-angle-double-right"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+/* Styles existants conservés */
+.progress {
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+}
+/* ... (autres styles existants) ... */
+
+/* Nouveaux styles */
+.btn-outline-secondary {
+    border-color: #6c757d;
+    color: #6c757d;
+}
+.btn-outline-secondary:hover {
+    background-color: #6c757d;
+    color: white;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Gestion des boutons de re-scan
+    document.querySelectorAll('a[href*="start-scan"]').forEach(button => {
+        button.addEventListener('click', function(e) {
+            const originalText = this.innerHTML;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>';
+            this.classList.add('disabled');
+        });
+    });
+});
+</script>
+{% endblock %}

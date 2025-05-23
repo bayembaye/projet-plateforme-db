@@ -1,0 +1,408 @@
+{% extends "base.html" %}
+{% load static %}
+{% load plagiarism_tags %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <!-- En-tête avec titre et statut -->
+                <div class="card-header pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6>Détails du scan anti-plagiat</h6>
+                            <p class="text-sm mb-0">
+                                <i class="fa fa-info-circle"></i>
+                                Soumission: <a href="{% url 'submission-detail' pk=scan.submission.id %}">{{ scan.submission.exercise.title }}</a>
+                            </p>
+                        </div>
+                        <div>
+                            <span class="badge badge-sm {{ scan.status|status_badge }}">
+                                {{ scan.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Corps principal -->
+                <div class="card-body">
+                    <!-- Section Résumé -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card card-plain h-100">
+                                <div class="card-header">
+                                    <h5 class="card-title">Informations</h5>
+                                </div>
+                                <div class="card-body">
+                                    <ul class="list-group list-group-flush">
+                                        <li class="list-group-item px-0">
+                                            <strong>Étudiant:</strong> 
+                                            {{ scan.submission.student.get_full_name }}
+                                        </li>
+                                        <li class="list-group-item px-0">
+                                            <strong>Exercice:</strong>
+                                            <a href="{% url 'exercise-detail' pk=scan.submission.exercise.id %}">
+                                                {{ scan.submission.exercise.title }}
+                                            </a>
+                                        </li>
+                                        <li class="list-group-item px-0">
+                                            <strong>Type de scan:</strong>
+                                            {{ scan.get_scan_type_display }}
+                                        </li>
+                                        <li class="list-group-item px-0">
+                                            <strong>Date:</strong>
+                                            {{ scan.created_at|date:"DATETIME_FORMAT" }}
+                                        </li>
+                                        {% if scan.completed_at %}
+                                        <li class="list-group-item px-0">
+                                            <strong>Durée:</strong>
+                                            {{ scan.completed_at|timesince:scan.created_at }}
+                                        </li>
+                                        {% endif %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Score de similarité -->
+                        <div class="col-md-6">
+                            <div class="card card-plain h-100">
+                                <div class="card-header">
+                                    <h5 class="card-title">Résultats</h5>
+                                </div>
+                                <div class="card-body text-center">
+                                    <div class="similarity-score-container">
+                                        <svg class="similarity-score-circle" width="120" height="120" viewBox="0 0 120 120">
+                                            <circle cx="60" cy="60" r="54" fill="none" stroke="#eee" stroke-width="8"/>
+                                            <circle class="score-circle" cx="60" cy="60" r="54" fill="none" stroke="#4CAF50" stroke-width="8" stroke-linecap="round"/>
+                                        </svg>
+                                        <span class="score-value">
+                                            {% if scan.similarity_score is not None %}
+                                                {{ scan.similarity_score|floatformat:1 }}%
+                                            {% else %}
+                                                N/A
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                    <p class="text-muted mt-2">
+                                        {% if scan.similarity_score is not None %}
+                                            {% if scan.similarity_score >= 70 %}
+                                                <i class="fas fa-exclamation-triangle text-danger"></i> Similarité élevée détectée
+                                            {% elif scan.similarity_score >= 40 %}
+                                                <i class="fas fa-exclamation-circle text-warning"></i> Similarité modérée détectée
+                                            {% else %}
+                                                <i class="fas fa-check-circle text-success"></i> Similarité faible
+                                            {% endif %}
+                                        {% else %}
+                                            Aucun score disponible
+                                        {% endif %}
+                                    </p>
+                                    {% if scan.error_message %}
+                                    <div class="alert alert-danger mt-3">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        {{ scan.error_message }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section Résultats détaillés -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header p-0">
+                                    <ul class="nav nav-tabs" id="resultsTab" role="tablist">
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link active" id="internal-tab" data-bs-toggle="tab" data-bs-target="#internal" type="button">
+                                                <i class="fas fa-database me-2"></i>
+                                                Correspondances internes
+                                                {% if scan.result_data.internal %}
+                                                    <span class="badge bg-primary ms-2">{{ scan.result_data.internal|length }}</span>
+                                                {% endif %}
+                                            </button>
+                                        </li>
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link" id="web-tab" data-bs-toggle="tab" data-bs-target="#web" type="button">
+                                                <i class="fas fa-globe me-2"></i>
+                                                Correspondances web
+                                                {% if scan.result_data.web %}
+                                                    <span class="badge bg-primary ms-2">{{ scan.result_data.web|length }}</span>
+                                                {% endif %}
+                                            </button>
+                                        </li>
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link" id="raw-tab" data-bs-toggle="tab" data-bs-target="#raw" type="button">
+                                                <i class="fas fa-code me-2"></i>
+                                                Données techniques
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="card-body">
+                                    <div class="tab-content" id="resultsTabContent">
+                                        <!-- Onglet Correspondances internes -->
+                                        <div class="tab-pane fade show active" id="internal" role="tabpanel">
+                                            {% if scan.result_data.internal %}
+                                                <div class="table-responsive">
+                                                    <table class="table align-items-center mb-0">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Similarité</th>
+                                                                <th>Étudiant</th>
+                                                                <th>Exercice</th>
+                                                                <th>Date</th>
+                                                                <th>Actions</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {% for match in scan.result_data.internal %}
+                                                            <tr>
+                                                                <td>
+                                                                    <div class="d-flex align-items-center">
+                                                                        <span class="me-2">{{ match.similarity|floatformat:2 }}%</span>
+                                                                        <div class="progress-wrapper w-100">
+                                                                            <div class="progress">
+                                                                                <div class="progress-bar bg-gradient-{{ match.similarity|score_color }}" 
+                                                                                     role="progressbar" 
+                                                                                     style="width: {{ match.similarity }}%"
+                                                                                     aria-valuenow="{{ match.similarity }}" 
+                                                                                     aria-valuemin="0" 
+                                                                                     aria-valuemax="100">
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </td>
+                                                                <td>{{ match.student }}</td>
+                                                                <td>{{ match.exercise }}</td>
+                                                                <td>{{ match.date|date:"SHORT_DATE_FORMAT" }}</td>
+                                                                <td>
+                                                                    <a href="{% url 'submission-detail' pk=match.submission_id %}" 
+                                                                       class="btn btn-sm btn-outline-info"
+                                                                       title="Voir la soumission">
+                                                                        <i class="fas fa-eye"></i>
+                                                                    </a>
+                                                                </td>
+                                                            </tr>
+                                                            {% endfor %}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            {% else %}
+                                                <div class="alert alert-info">
+                                                    <i class="fas fa-info-circle me-2"></i>
+                                                    Aucune correspondance trouvée dans la base interne.
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <!-- Onglet Correspondances web -->
+                                        <div class="tab-pane fade" id="web" role="tabpanel">
+                                            {% if scan.result_data.web %}
+                                                <div class="table-responsive">
+                                                    <table class="table align-items-center mb-0">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Similarité</th>
+                                                                <th>Source</th>
+                                                                <th>URL</th>
+                                                                <th>Extrait</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {% for match in scan.result_data.web %}
+                                                            <tr>
+                                                                <td>
+                                                                    <span class="badge bg-{{ match.similarity|score_color }}">
+                                                                        {{ match.similarity|floatformat:2 }}%
+                                                                    </span>
+                                                                </td>
+                                                                <td>{{ match.source }}</td>
+                                                                <td>
+                                                                    <a href="{{ match.url }}" target="_blank" rel="noopener noreferrer">
+                                                                        {{ match.url|truncatechars:40 }}
+                                                                    </a>
+                                                                </td>
+                                                                <td>
+                                                                    <button class="btn btn-sm btn-outline-primary" 
+                                                                            data-bs-toggle="collapse" 
+                                                                            data-bs-target="#snippet-{{ forloop.counter }}">
+                                                                        Voir l'extrait
+                                                                    </button>
+                                                                    <div class="collapse" id="snippet-{{ forloop.counter }}">
+                                                                        <div class="card card-body mt-2">
+                                                                            {{ match.snippet }}
+                                                                        </div>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                            {% endfor %}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            {% else %}
+                                                <div class="alert alert-info">
+                                                    <i class="fas fa-info-circle me-2"></i>
+                                                    Aucune correspondance trouvée sur le web.
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <!-- Onglet Données brutes -->
+                                        <div class="tab-pane fade" id="raw" role="tabpanel">
+                                            <div class="mb-3">
+                                                <button class="btn btn-sm btn-primary" id="copy-json">
+                                                    <i class="fas fa-copy me-2"></i>Copier le JSON
+                                                </button>
+                                            </div>
+                                            <pre class="bg-dark text-white p-3 rounded"><code id="json-data">{{ scan.result_data|json_script:"result-data" }}</code></pre>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Pied de page avec boutons d'action -->
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'plagiarism:scan-list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+                        </a>
+                        {% if request.user.is_professor %}
+                        <div class="btn-group">
+                            <a href="{% url 'plagiarism:start-scan' submission_id=scan.submission.id %}?scan_type=INTERNAL" 
+                               class="btn btn-outline-primary"
+                               id="rescan-internal">
+                                <i class="fas fa-redo me-2"></i>Scan Interne
+                            </a>
+                            <a href="{% url 'plagiarism:start-scan' submission_id=scan.submission.id %}?scan_type=BOTH" 
+                               class="btn btn-primary"
+                               id="rescan-full">
+                                <i class="fas fa-sync-alt me-2"></i>Scan Complet
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.similarity-score-container {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin: 0 auto;
+}
+.score-circle {
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
+    transition: stroke-dashoffset 1s ease-in-out, stroke 0.5s ease;
+}
+.score-value {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.8rem;
+    font-weight: bold;
+}
+.nav-tabs .nav-link {
+    border: none;
+    padding: 1rem 1.5rem;
+    color: #6c757d;
+}
+.nav-tabs .nav-link.active {
+    color: #495057;
+    background-color: transparent;
+    border-bottom: 3px solid #4e73df;
+}
+.card-plain {
+    background: transparent;
+    box-shadow: none;
+}
+.card-plain .card-header {
+    padding-left: 0;
+    padding-right: 0;
+}
+.list-group-flush .list-group-item {
+    padding-left: 0;
+    padding-right: 0;
+    background: transparent;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Animation du cercle de score
+    const score = parseFloat("{{ scan.similarity_score|default:0 }}");
+    const scoreCircle = document.querySelector('.score-circle');
+    
+    if (scoreCircle) {
+        const circumference = 2 * Math.PI * 54;
+        const offset = circumference - (score / 100) * circumference;
+        scoreCircle.style.strokeDasharray = circumference;
+        scoreCircle.style.strokeDashoffset = offset;
+        
+        // Change la couleur en fonction du score
+        if (score >= 70) {
+            scoreCircle.style.stroke = '#e74a3b';
+        } else if (score >= 40) {
+            scoreCircle.style.stroke = '#f6c23e';
+        } else {
+            scoreCircle.style.stroke = '#1cc88a';
+        }
+    }
+    
+    // Copie du JSON
+    document.getElementById('copy-json')?.addEventListener('click', function() {
+        const jsonData = document.getElementById('json-data').textContent;
+        navigator.clipboard.writeText(jsonData).then(() => {
+            const originalText = this.innerHTML;
+            this.innerHTML = '<i class="fas fa-check me-2"></i>Copié!';
+            setTimeout(() => {
+                this.innerHTML = originalText;
+            }, 2000);
+        });
+    });
+    
+    // Gestion des boutons de re-scan
+    const rescanButtons = document.querySelectorAll('#rescan-internal, #rescan-full');
+    rescanButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            const originalText = this.innerHTML;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>En cours...';
+            this.classList.add('disabled');
+        });
+    });
+
+    // Gestion des onglets
+    const tabElms = document.querySelectorAll('button[data-bs-toggle="tab"]');
+    tabElms.forEach(tabEl => {
+        tabEl.addEventListener('click', function(e) {
+            e.preventDefault();
+            const tabTarget = document.querySelector(this.dataset.bsTarget);
+            
+            document.querySelectorAll('.tab-pane').forEach(pane => {
+                pane.classList.remove('show', 'active');
+            });
+            
+            tabElms.forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            this.classList.add('active');
+            tabTarget.classList.add('show', 'active');
+        });
+    });
+});
+</script>
+{% endblock %}

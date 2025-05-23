@@ -1,0 +1,417 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Accueil - Plateforme d'Évaluation{% endblock %}
+
+
+
+{% block content %}
+<div class="min-h-screen overflow-x-hidden">
+    <!-- Hero Section avec illustration animée -->
+    <section class="relative bg-gradient-to-br from-green-500 via-teal-600 to-blue-700 text-white py-20 md:py-32 overflow-hidden">
+        <!-- Fond décoratif -->
+        <div class="absolute inset-0 opacity-20">
+            <div class="absolute top-0 left-0 w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxkZWZzPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuIiB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHBhdHRlcm5UcmFuc2Zvcm09InJvdGF0ZSg0NSkiPjxyZWN0IHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjA1KSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3QgZmlsbD0idXJsKCNwYXR0ZXJuKSIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIvPjwvc3ZnPg==')]"></div>
+        </div>
+
+        <div class="container mx-auto px-4 relative z-10">
+            <div class="flex flex-col lg:flex-row items-start">  <!-- Changé de items-center à items-start -->
+                <div class="lg:w-1/2 mb-12 lg:mb-0 animate-fade-in-up">
+                    <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+                        Maîtrisez les <span class="text-yellow-300">bases de données</span> comme jamais
+                    </h1>
+                    <p class="text-xl md:text-2xl mb-8 max-w-2xl opacity-90">
+                        La plateforme ultime pour apprendre, pratiquer et exceller en modélisation de données.
+                    </p>
+                    <!-- Ajout de la citation depuis home initial -->
+                    <div class="max-w-2xl mx-auto mb-8 p-6 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
+                        <blockquote class="text-xl italic">
+                            "Dans chaque donnée, un éclat de vérité,
+                                Et dans la base, l’art de la clarté.
+                                Quand l’ordre guide chaque relation,
+                                Naît le pouvoir de l’information."
+                        </blockquote>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        {% if user.is_authenticated %}
+                            <a href="{% url 'exercise-list' %}" class="btn-primary-glow px-8 py-4 text-lg font-bold">
+                                Voir les exercices
+                            </a>
+                            <a href="{% url 'account_profile' %}" class="btn-secondary-transparent px-8 py-4 text-lg font-bold">
+                                Mon profil
+                            </a>
+                        {% else %}
+                            <a href="{% url 'account_signup' %}" class="btn-primary-glow px-8 py-4 text-lg font-bold">
+                                S'inscrire gratuitement
+                            </a>
+                            <a href="{% url 'account_login' %}" class="btn-secondary-transparent px-8 py-4 text-lg font-bold">
+                                Se connecter
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="lg:w-1/2 animate-float self-start mt-4">
+                    <img src="{% static 'images/bd.png' %}" alt="Illustration base de données" class="w-full max-w-lg mx-auto">
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Section marques partenaires -->
+    <div class="bg-gray-50 dark:bg-gray-900 py-12">
+        <div class="container mx-auto px-4">
+            <p class="text-center text-gray-500 dark:text-gray-400 mb-8">Technologies supportées :</p>
+            <div class="flex flex-wrap justify-center gap-8 md:gap-16 items-center">
+                <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original-wordmark.svg" class="h-12 opacity-70 hover:opacity-100 transition" alt="PostgreSQL">
+                <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mysql/mysql-original-wordmark.svg" class="h-12 opacity-70 hover:opacity-100 transition" alt="MySQL">
+                <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/oracle/oracle-original.svg" class="h-12 opacity-70 hover:opacity-100 transition" alt="Oracle">
+                <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/sqlite/sqlite-original-wordmark.svg" class="h-12 opacity-70 hover:opacity-100 transition" alt="SQLite">
+            </div>
+        </div>
+    </div>
+
+    <!-- Section Fonctionnalités -->
+    <section class="py-20 bg-white dark:bg-gray-950">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-16">
+                <span class="inline-block px-3 py-1 text-sm font-semibold text-blue-600 bg-blue-100 rounded-full dark:bg-blue-900 dark:text-blue-200 mb-4">
+                    Fonctionnalités
+                </span>
+                <h2 class="text-3xl md:text-4xl font-bold mb-4 dark:text-white">
+                    Une expérience d'apprentissage <span class="text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-blue-600">révolutionnaire</span>
+                </h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto dark:text-gray-300">
+                    Découvrez comment notre plateforme transforme votre manière d'apprendre les bases de données.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Feature 1 -->
+                <div class="feature-card bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 dark:border-gray-800">
+                    <div class="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center mb-6">
+                        <svg class="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 dark:text-white">Exercices variés</h3>
+                    <p class="text-gray-600 dark:text-gray-400 mb-4">
+                        Des centaines d'exercices couvrant tous les concepts des bases de données relationnelles.
+                    </p>
+                    <div class="mt-4">
+                        <span class="inline-block px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full dark:bg-green-900 dark:text-green-200 mr-2">SQL</span>
+                        <span class="inline-block px-2 py-1 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full dark:bg-blue-900 dark:text-blue-200 mr-2">Modélisation</span>
+                        <span class="inline-block px-2 py-1 text-xs font-semibold bg-purple-100 text-purple-800 rounded-full dark:bg-purple-900 dark:text-purple-200">Optimisation</span>
+                    </div>
+                </div>
+
+                <!-- Feature 2 -->
+                <div class="feature-card bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 dark:border-gray-800">
+                    <div class="w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center mb-6">
+                        <svg class="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 dark:text-white">Correction intelligente</h3>
+                    <p class="text-gray-600 dark:text-gray-400 mb-4">
+                        Notre IA analyse vos requêtes SQL et fournit des feedbacks précis pour vous améliorer.
+                    </p>
+                    <div class="mt-6">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 h-3 w-3 bg-green-500 rounded-full animate-pulse"></div>
+                            <div class="ml-2 text-sm text-gray-500 dark:text-gray-400">Feedback instantané</div>
+                        </div>
+                        <div class="flex items-center mt-2">
+                            <div class="flex-shrink-0 h-3 w-3 bg-blue-500 rounded-full animate-pulse" style="animation-delay: 0.2s"></div>
+                            <div class="ml-2 text-sm text-gray-500 dark:text-gray-400">Suggestions d'optimisation</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="feature-card bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 dark:border-gray-800">
+                    <div class="w-16 h-16 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center mb-6">
+                        <svg class="w-8 h-8 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 dark:text-white">Suivi détaillé</h3>
+                    <p class="text-gray-600 dark:text-gray-400 mb-4">
+                        Tableaux de bord personnalisés pour visualiser votre progression et vos points faibles.
+                    </p>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 mt-4">
+                        <div class="bg-gradient-to-r from-green-400 to-blue-500 h-2.5 rounded-full" style="width: 75%"></div>
+                    </div>
+                    <div class="flex justify-between text-sm text-gray-500 dark:text-gray-400 mt-2">
+                        <span>Débutant</span>
+                        <span>75% complété</span>
+                        <span>Expert</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section Exercices Récents -->
+    <section class="py-20 bg-gray-50 dark:bg-gray-900">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-16">
+                <span class="inline-block px-3 py-1 text-sm font-semibold text-blue-600 bg-blue-100 rounded-full dark:bg-blue-900 dark:text-blue-200 mb-4">
+                    Exercices
+                </span>
+                <h2 class="text-3xl md:text-4xl font-bold mb-4 dark:text-white">
+                    Derniers exercices ajoutés
+                </h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto dark:text-gray-300">
+                    Mettez en pratique vos connaissances avec nos exercices réalistes.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {% for exercise in recent_exercises %}
+                <div class="exercise-card bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 dark:border-gray-700">
+                    <div class="relative">
+                        <div class="h-48 bg-gradient-to-r from-green-400 to-blue-500 flex items-center justify-center">
+                            <svg class="w-20 h-20 text-white opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path>
+                            </svg>
+                        </div>
+                        <div class="absolute top-4 right-4">
+                            <span class="px-3 py-1 text-xs font-semibold rounded-full {% if exercise.difficulty_level == 'easy' %}bg-green-100 text-green-800{% elif exercise.difficulty_level == 'medium' %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                {{ exercise.get_difficulty_level_display }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-xl font-bold dark:text-white">{{ exercise.title }}</h3>
+                        </div>
+                        <p class="text-gray-600 mb-4 dark:text-gray-400">{{ exercise.description|truncatechars:120 }}</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-500 dark:text-gray-400">
+                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                {{ exercise.created_at|date:"d/m/Y" }}
+                            </span>
+                            <a href="{% url 'exercise-detail' exercise.pk %}" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium flex items-center">
+                                Voir l'exercice
+                                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-span-3 text-center py-12">
+                    <div class="inline-block p-6 bg-white dark:bg-gray-800 rounded-full shadow-lg mb-4">
+                        <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">Aucun exercice disponible</h3>
+                    <p class="text-gray-500 dark:text-gray-400">De nouveaux exercices seront bientôt ajoutés.</p>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="text-center mt-12">
+                <a href="{% url 'exercise-list' %}" class="btn-primary px-8 py-3 text-lg font-semibold inline-flex items-center">
+                    Explorer tous les exercices
+                    <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section CTA finale -->
+    <section class="py-20 bg-white dark:bg-gray-950">
+        <div class="container mx-auto px-4 text-center">
+            <div class="max-w-4xl mx-auto bg-gradient-to-r from-green-500 to-blue-600 rounded-2xl p-12 shadow-xl relative overflow-hidden">
+                <!-- Éléments décoratifs -->
+                <div class="absolute -top-20 -left-20 w-40 h-40 bg-white/10 rounded-full"></div>
+                <div class="absolute -bottom-20 -right-20 w-40 h-40 bg-white/10 rounded-full"></div>
+                <div class="absolute top-1/2 right-10 w-20 h-20 bg-yellow-300/20 rounded-full blur-xl"></div>
+                
+                <h2 class="text-3xl md:text-4xl font-bold text-white mb-6 relative z-10">
+                    Prêt à maîtriser les bases de données ?
+                </h2>
+                <p class="text-xl text-white/90 mb-8 max-w-2xl mx-auto relative z-10">
+                    Chaque grande aventure commence par un premier pas. Rejoignez-nous et faites partie des pionniers !
+                </p>
+                <div class="flex flex-col sm:flex-row justify-center gap-4 relative z-10">
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'exercise-list' %}" class="btn-white-glow px-8 py-4 text-lg font-bold">
+                            Commencer les exercices
+                        </a>
+                    {% else %}
+                        <a href="{% url 'account_signup' %}" class="btn-white-glow px-8 py-4 text-lg font-bold">
+                            S'inscrire gratuitement
+                        </a>
+                        <a href="{% url 'account_login' %}" class="btn-transparent-white px-8 py-4 text-lg font-bold">
+                            Se connecter
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<style>
+    /* Animations personnalisées */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes float {
+        0% {
+            transform: translateY(0px);
+        }
+        50% {
+            transform: translateY(-15px);
+        }
+        100% {
+            transform: translateY(0px);
+        }
+    }
+
+    @keyframes pulse-glow {
+        0% {
+            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+        }
+        70% {
+            box-shadow: 0 0 0 15px rgba(59, 130, 246, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+        }
+    }
+
+    .animate-fade-in-up {
+        animation: fadeInUp 0.8s ease-out forwards;
+    }
+
+    .animate-float {
+        animation: float 6s ease-in-out infinite;
+    }
+
+    .btn-primary-glow {
+        background: linear-gradient(to right, #3b82f6, #6366f1);
+        color: white;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+    }
+
+    .btn-primary-glow:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+    }
+
+    .btn-secondary-transparent {
+        background: transparent;
+        color: white;
+        border: 2px solid white;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-secondary-transparent:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .btn-white-glow {
+        background: white;
+        color: #3b82f6;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(255, 255, 255, 0.4);
+    }
+
+    .btn-white-glow:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255, 255, 255, 0.6);
+    }
+
+    .btn-transparent-white {
+        background: transparent;
+        color: white;
+        border: 2px solid white;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-transparent-white:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .feature-card:hover .feature-icon {
+        transform: rotateY(180deg);
+    }
+
+    .exercise-card:hover .exercise-image {
+        transform: scale(1.05);
+    }
+
+    /* Effet de vague décoratif */
+    .wave-divider {
+        position: relative;
+        height: 100px;
+        overflow: hidden;
+    }
+
+    .wave-divider::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        height: 100%;
+        background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 1200 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"><path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z" fill="%23ffffff" opacity=".25"/><path d="M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24 .13-24.59C1057.91,60.27,1097.78,26.21,1200,0V120Z" fill="%23ffffff" opacity=".25"/></svg>');
+    }
+
+    /* Styles pour le mode sombre */
+    .dark .feature-card {
+        background-gradient: linear-gradient(to bottom right, #1f2937, #111827);
+        border-color: #374151;
+    }
+
+    .dark .btn-primary {
+        @apply bg-blue-700 text-white border-blue-700 hover:bg-blue-800;
+    }
+
+    .dark .btn-secondary {
+        @apply border-white hover:bg-gray-900 hover:text-white;
+    }
+
+    .dark .btn-primary-glow {
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.6);
+    }
+
+    /* Styles pour les notifications */
+    .notification-badge {
+        @apply absolute -top-1 -right-1 h-5 w-5 text-xs flex items-center justify-center bg-red-500 text-white rounded-full;
+    }
+    
+    .notification-item {
+        @apply p-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800;
+    }
+    
+    .notification-unread {
+        @apply bg-blue-50 dark:bg-blue-900/20;
+    }
+</style>
+{% endblock %}

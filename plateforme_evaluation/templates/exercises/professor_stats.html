@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-6">Statistiques d'Enseignement</h1>
+    
+    {% if no_data %}
+    <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
+        <p>Vous n'avez pas encore suffisamment de données pour afficher les statistiques.</p>
+    </div>
+    {% else %}
+    <!-- Statistiques générales -->
+    <div class="bg-white p-6 rounded-lg shadow mb-8">
+        <h2 class="text-xl font-semibold mb-4">Aperçu Général</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-gray-50 p-4 rounded">
+                <p class="text-sm text-gray-500">Exercices créés</p>
+                <p class="text-2xl font-bold">{{ stats.general_stats.total_exercises }}</p>
+            </div>
+            <div class="bg-gray-50 p-4 rounded">
+                <p class="text-sm text-gray-500">Soumissions</p>
+                <p class="text-2xl font-bold">{{ stats.general_stats.total_submissions }}</p>
+            </div>
+            <div class="bg-gray-50 p-4 rounded">
+                <p class="text-sm text-gray-500">Taux de soumission</p>
+                <p class="text-2xl font-bold">{{ stats.general_stats.submission_rate|floatformat:1 }}%</p>
+            </div>
+            <div class="bg-gray-50 p-4 rounded">
+                <p class="text-sm text-gray-500">Moyenne générale</p>
+                <p class="text-2xl font-bold">{{ stats.general_stats.average_grade|floatformat:1 }}/20</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Performance par exercice -->
+    <div class="bg-white p-6 rounded-lg shadow mb-8">
+        <h2 class="text-xl font-semibold mb-4">Performance par Exercice</h2>
+        <div class="overflow-x-auto">
+            <table class="min-w-full">
+                <thead>
+                    <tr class="border-b">
+                        <th class="text-left py-2 px-4">Exercice</th>
+                        <th class="text-left py-2 px-4">Soumissions</th>
+                        <th class="text-left py-2 px-4">Taux complétion</th>
+                        <th class="text-left py-2 px-4">Moyenne</th>
+                        <th class="text-left py-2 px-4">Difficulté</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stat in stats.exercise_stats %}
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="py-2 px-4">
+                            <a href="{% url 'exercise-detail' stat.exercise.id %}" class="text-blue-600 hover:underline">
+                                {{ stat.exercise.title }}
+                            </a>
+                        </td>
+                        <td class="py-2 px-4">{{ stat.submission_count }}</td>
+                        <td class="py-2 px-4">{{ stat.completion_rate|floatformat:1 }}%</td>
+                        <td class="py-2 px-4">{{ stat.average_grade|floatformat:1 }}/20</td>
+                        <td class="py-2 px-4">
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div class="bg-blue-600 h-2.5 rounded-full" 
+                                     style="width: {{ stat.difficulty_index }}%"></div>
+                            </div>
+                            <span class="text-xs">{{ stat.difficulty_index|floatformat:0 }}/100</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Graphiques -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Tendance des soumissions -->
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h3 class="font-semibold text-lg mb-4">Tendance des Soumissions</h3>
+            <div class="h-64">
+                {% if stats.submission_trends %}
+                    <canvas id="submissionTrendChart"></canvas>
+                {% else %}
+                    <p class="text-gray-500">Aucune donnée de tendance disponible</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Erreurs communes -->
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h3 class="font-semibold text-lg mb-4">Erreurs Courantes</h3>
+            {% if stats.common_errors %}
+                <div class="space-y-3">
+                    {% for error, count in stats.common_errors %}
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-medium capitalize">{{ error }}</span>
+                            <span class="text-sm bg-gray-100 px-2 py-1 rounded">{{ count }} occurrence{{ count|pluralize }}</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-red-600 h-2 rounded-full" 
+                                 style="width: {% widthratio count stats.common_errors.0.1 100 %}%"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
+                    <p>Aucun motif d'erreur récurrent identifié dans les feedbacks.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Meilleurs étudiants -->
+    <div class="bg-white p-6 rounded-lg shadow">
+        <h2 class="text-xl font-semibold mb-4">Top Étudiants</h2>
+        <div class="overflow-x-auto">
+            <table class="min-w-full">
+                <thead>
+                    <tr class="border-b">
+                        <th class="text-left py-2 px-4">Étudiant</th>
+                        <th class="text-left py-2 px-4">Moyenne</th>
+                        <th class="text-left py-2 px-4">Soumissions</th>
+                        <th class="text-left py-2 px-4">Retards</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in stats.student_performance %}
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="py-2 px-4">
+                            {{ student.student__first_name }} {{ student.student__last_name }}
+                        </td>
+                        <td class="py-2 px-4">{{ student.avg_grade|floatformat:1 }}/20</td>
+                        <td class="py-2 px-4">{{ student.count }}</td>
+                        <td class="py-2 px-4">
+                            {% if student.late > 0 %}
+                            <span class="text-red-600">{{ student.late }}</span>
+                            {% else %}
+                            <span class="text-green-600">0</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% if not no_data %}
+<!-- Scripts pour les graphiques -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Graphique des tendances
+    {% if stats.submission_trends %}
+    const trendData = JSON.parse('{{ stats.submission_trends_json|escapejs }}');
+    const trendCtx = document.getElementById('submissionTrendChart').getContext('2d');
+    
+    new Chart(trendCtx, {
+        type: 'line',
+        data: {
+            labels: trendData.map(item => new Date(item.week).toLocaleDateString('fr-FR', {month: 'short', day: 'numeric'})),
+            datasets: [{
+                label: 'Soumissions totales',
+                data: trendData.map(item => item.total),
+                borderColor: 'rgb(59, 130, 246)',
+                backgroundColor: 'rgba(59, 130, 246, 0.05)',
+                tension: 0.4,
+                fill: true
+            }, {
+                label: 'Soumissions notées',
+                data: trendData.map(item => item.graded),
+                borderColor: 'rgb(16, 185, 129)',
+                backgroundColor: 'rgba(16, 185, 129, 0.05)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Nombre de soumissions'
+                    }
+                }
+            }
+        }
+    });
+    {% endif %}
+});
+</script>
+{% endif %}
+{% endblock %}
